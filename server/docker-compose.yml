@@ -1,0 +1,39 @@
+services:
+
+  api:
+    build:
+      context: ./api # APIサーバーのDockerfileがあるディレクトリ
+      dockerfile: Dockerfile # Dockerfileの名前
+    volumes:
+      - ./api:/app
+    env_file:
+      - ./.env # 環境変数ファイル
+    depends_on:
+      - mysql # MySQLコンテナ作成後に起動
+    networks:
+      - epaper-network
+
+  mysql:
+    image: mysql:8.0
+    restart: always
+    env_file:
+      - ./.env # 環境変数ファイル
+    volumes:
+      - ./mysql/initdb.d:/docker-entrypoint-initdb.d # 初期化
+    networks:
+      - epaper-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80" # ホストの80番ポートをコンテナの80番ポートにマッピング
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro # カスタムnginx設定ファイルをマウント
+    depends_on:
+      - api # APIコンテナ作成後に起動
+    networks:
+      - epaper-network
+
+networks:
+  epaper-network:
+    driver: bridge 

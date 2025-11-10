@@ -1,0 +1,12 @@
+# 1. Webフレームワーク本体
+fastapi
+
+# 2. FastAPIを動かすためのASGIサーバー
+uvicorn[standard]
+
+# 3. MySQLデータベースに接続するため
+sqlalchemy
+pymysql
+
+# 4. .env ファイルを読み込むため
+python-dotenv
