@@ -10,3 +10,13 @@ pymysql
 
 # 4. .env ファイルを読み込むため
 python-dotenv
+
+# 5 画像生成（Pillow）のため
+Pillow
+
+#6祝日判定のため
+holidays
+
+#7 googleモジュール使用のため
+google-api-python-client
+google-auth-oauthlib
