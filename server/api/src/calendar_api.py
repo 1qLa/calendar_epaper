@@ -1,4 +1,5 @@
 import datetime
+import os
 import os.path
 import calendar
 
@@ -7,7 +8,11 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from dotenv import load_dotenv
 
+load_dotenv() # .envファイルから環境変数を読み込む
+
+CALENDAR_ID = os.getenv("CALENDAR_ID") 
 
 # APIに要求する権限を指定
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
@@ -62,7 +67,7 @@ def getEvents(year, month):
         service.events()
         .list(
           # calendarIdに取得したい予定のカレンダーIDを指定する
-          calendarId="f925fe9e059650b7f59278c796d48ad55b257f2cf9bf27adf52b4c32e5a89e3d@group.calendar.google.com",
+          calendarId=CALENDAR_ID,
           timeMin=time_min,
           timeMax=time_max,
           singleEvents=True,
