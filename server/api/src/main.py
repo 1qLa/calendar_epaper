@@ -1,5 +1,6 @@
-from fastapi import FastAPI
-
+from fastapi import FastAPI, Response
+from src import create_png
+import io
 
 app = FastAPI() 
 
@@ -10,3 +11,7 @@ def read_root():
 @app.get("/message")
 def read_message():
     return {"message": "正常に動作しています"}
+
+@app.get("/data")
+def read_data():
+    return Response(content=create_png.create_calendar_image(), media_type="image/png")
