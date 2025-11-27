@@ -8,7 +8,6 @@ import json
 
 from src import calendar_api
 
-
 ## 各種設定
 # カレンダーのピクセル数(デフォルト 680:540)
 CALENDAR_WIDTH = 680
@@ -324,17 +323,17 @@ def throw_data():
 
 if __name__ == "__main__":
     
-    # print("カレンダー画像を生成中...")
-    # png_data = create_calendar_image()
+    print("カレンダー画像を生成中...")
+    png_data = create_calendar_image()
     
-    # # サーバー（Flaskなど）では、この png_data をHTTPレスポンスとして返す
+    # サーバー（Flaskなど）では、この png_data をHTTPレスポンスとして返す
     
-    # # このファイルと同じディレクトリに出力(テスト用)
-    # output_filename = "this_month_calendar.png"
-    # with open(output_filename, "wb") as f:
-    #     f.write(png_data)
+    # このファイルと同じディレクトリに出力(テスト用)
+    output_filename = "this_month_calendar.png"
+    with open(output_filename, "wb") as f:
+        f.write(png_data)
         
     # print(f"カレンダー画像を '{output_filename}' として保存しました。\n")
     data = create_calendar_image()
-    print(data)
+    #print(data)
     
