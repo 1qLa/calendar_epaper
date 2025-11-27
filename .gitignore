@@ -228,3 +228,6 @@ __marimo__/
 
 #python
 /server/api/src/key/*
+
+# DS_Store
+.DS_Store
