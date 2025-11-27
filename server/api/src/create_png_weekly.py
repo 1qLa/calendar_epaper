@@ -149,25 +149,23 @@ def draw_time(draw):
 
 def draw_current_time_line(draw):
     """
-    現在時刻の横線を描画（2時間で33pxのスケールに合わせて修正）
+    現在時刻の横線を描画
     """
-    now = datetime.datetime.now()
+    DIFF_JST_FROM_UTC = 9
+    now = datetime.datetime.utcnow() + datetime.timedelta(hours=DIFF_JST_FROM_UTC)
     current_hour = now.hour
     current_minute = now.minute
+    print(f"現在時刻: {now} {current_hour}:{current_minute:02d}")
 
-    # 時間軸の開始位置（draw_time と同じ）
+    # 時間軸の開始位置・間隔（draw_time と同じにする）
+    btmTime = 16.5  # 1時間ごとの縦間隔
     text_start_y = 150
-    
-    # draw_timeが使用している間隔: 2時間で33px。
-    # 1時間あたりの縦間隔 (16.5) を使用する。
-    PX_PER_HOUR = 33 / 2
 
     # 現在時刻のy座標を計算
-    # y = text_start_y + (時間 + 分/60) * (1時間あたりのピクセル数)
-    y = text_start_y + (current_hour * 4 + (current_minute / 60)) * PX_PER_HOUR
+    y = text_start_y + (current_hour + current_minute / 60) * btmTime
 
-    # 線を描画
-    x_start = 70
+    # 線を描画（左端は時間軸右端まで伸ばす）
+    x_start = 70  # 時間軸ラベルの少し右
     x_end = CALENDAR_WIDTH
 
     draw.line(
