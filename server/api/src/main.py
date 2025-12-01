@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Response
 from src import create_png
 from src import create_png_weekly
+from src import create_today_png
+
 import io
 
 app = FastAPI() 
@@ -20,3 +22,7 @@ def read_data():
 @app.get("/weekData")
 def read_week_data():
     return Response(content=create_png_weekly.create_calendar_image_week(), media_type="image/png")
+
+@app.get("/todayData")
+def read_today_data():
+    return Response(content=create_today_png.create_today_image(), media_type="image/png")
