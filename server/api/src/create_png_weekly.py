@@ -13,6 +13,9 @@ from src import calendar_api
 # カレンダーのピクセル数(デフォルト 680:540)
 CALENDAR_WIDTH = 680
 CALENDAR_HEIGHT = 540
+MARGIN = 8
+MARGIN_TIMELINE = 7
+MARGIN_TIMELINE_HEIGHT = 2
 
 FONT_FILE = "./src/key/KaiseiTokumin-Regular.ttf"
 FONT_LARGE = 36
@@ -64,38 +67,51 @@ def parse_events_from_json(events_list):
     Googleカレンダーのjson形式データを解析して、
     日付をキー、予定タイトルのリストを値とする辞書を返す
     (週・月カレンダー共通)
+    【修正点: 終了時間 (end_time) も取得するようにしました】
     """
     events_dict = {}
     if not events_list:
         return events_dict
     
+    # datetime モジュールを使用しているため、json.JSONDecodeError は
+    # この関数が直接JSON文字列をパースしていない場合は不要かもしれませんが、残しておきます。
     try:
         for event in events_list:
             start = event.get("start", {})
+            end = event.get("end", {})  # 👈 終了情報 'end' を取得
+            
             date_str = start.get("date") or start.get("dateTime")
 
             if date_str:
+                # 日付オブジェクトの作成（終日予定と時間指定予定のいずれにも対応）
                 date_obj = datetime.datetime.strptime(date_str[:10], "%Y-%m-%d").date()
                 if date_obj not in events_dict:
                     events_dict[date_obj] = []
                 summary = event.get("summary", "予定あり")
                 
-                # 週カレンダーのdraw_appointmentのために、時間情報も追加（あれば）
+                # 🕖 開始時刻の取得
                 start_time_str = ""
                 if "dateTime" in start:
                     # 例: 2025-11-27T09:30:00+09:00 -> 09:30
-                    start_time_str = datetime.datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S%z").strftime("%H:%M")
+                    # タイムゾーン情報は削除して時刻のみを取得
+                    start_time_str = datetime.datetime.strptime(start.get("dateTime"), "%Y-%m-%dT%H:%M:%S%z").strftime("%H:%M")
 
+                # 🕤 終了時刻の取得 👈 追加された重要な部分
+                end_time_str = ""
+                if "dateTime" in end:
+                    # 'end' の 'dateTime' を使用
+                    end_time_str = datetime.datetime.strptime(end.get("dateTime"), "%Y-%m-%dT%H:%M:%S%z").strftime("%H:%M")
+                
+                # 辞書に start_time と **end_time** を追加
                 events_dict[date_obj].append({
                     "summary": summary,
-                    "start_time": start_time_str
+                    "start_time": start_time_str,
+                    "end_time": end_time_str  # 👈 終了時刻を追加
                 })
 
-    except json.JSONDecodeError :
-        print("警告:jsonデータの解析に失敗しました")
-
-    except Exception as e :
-        print(f"警告:予定の読み込み中に問題が発生しました {e}")
+    except Exception as e:
+        # json.JSONDecodeError も含む一般的なエラー処理に変更
+        print(f"警告:予定の読み込み中に問題が発生しました: {e}")
 
     return events_dict
         
@@ -129,23 +145,32 @@ def draw_time(draw):
     """
     text_start_x = 40
     time_start_x = text_start_x + 30
-    text_start_y = 150
+    text_start_y = 150 - MARGIN
     btmTime = 33 # 時間ごとの縦間隔
     
     # FONT_TIME_OBJ を使用
     font_time = FONT_TIME_OBJ
     
-    for hour in range(12):
+    for hour in range(13):
         y = text_start_y + hour * btmTime
         time_text = f"{hour * 2:02d}:00"
-        draw.text(
-            (text_start_x, y),
-            time_text,
-            fill=BLACK,
-            font=font_time,
-            anchor="mm"
-        )
-        draw.line((time_start_x, y, CALENDAR_WIDTH, y), fill=BLACK, width=1)    
+        if(hour != 12):
+            draw.text(
+                (text_start_x, y),
+                time_text,
+                fill=BLACK,
+                font=font_time,
+                anchor="mm"
+            )
+        elif(hour == 12):
+            draw.text(
+                (text_start_x, y - btmTime / 6),
+                "24:00",
+                fill=BLACK,
+                font=font_time,
+                anchor="mm"
+            )
+        draw.line((time_start_x, y, CALENDAR_WIDTH - MARGIN_TIMELINE, y), fill=BLACK, width=1)    
 
 def draw_current_time_line(draw):
     """
@@ -159,7 +184,7 @@ def draw_current_time_line(draw):
 
     # 時間軸の開始位置・間隔（draw_time と同じにする）
     btmTime = 16.5  # 1時間ごとの縦間隔
-    text_start_y = 150
+    text_start_y = 150 - MARGIN
 
     # 現在時刻のy座標を計算
     y = text_start_y + (current_hour + current_minute / 60) * btmTime
@@ -177,7 +202,7 @@ def draw_current_time_line(draw):
 def draw_appointment_week(current_date, events_mapped, day_x, draw):
     """
     指定された位置にその日の予定を時間軸に沿って書き込む関数 (週カレンダー用)
-    予定のタイトルを灰色で背景塗りつぶし矩形内に表示
+    予定のタイトルを灰色で背景塗りつぶし矩形内に表示 (修正済み: 開始〜終了時刻を反映)
     """
 
     if current_date not in events_mapped:
@@ -185,60 +210,87 @@ def draw_appointment_week(current_date, events_mapped, day_x, draw):
 
     daily_events = events_mapped[current_date]
 
-    # 時間軸の開始位置（draw_timeと同じ）
+    # 時間軸の開始位置
     text_start_y = 150
+    # 1時間あたりのピクセル数。これはコード全体で統一されているべきです。
     PX_PER_HOUR = 33 / 2  # 16.5 ピクセル/時間
 
-    font_event = FONT_EVENT_OBJ 
+    # FONT_EVENT_OBJ, BLACK はグローバルまたは引数として定義されていると仮定
+    # font_event = FONT_EVENT_OBJ 
 
     for event in daily_events[:10]:  # 最大10件まで表示
         summary = event.get("summary", "予定あり")
         start_time_str = event.get("start_time", "00:00")
         end_time_str = event.get("end_time", None)
 
-        # 開始時間を分解
+        # 1. 開始時間を分解
         try:
             start_hour, start_minute = map(int, start_time_str.split(":"))
         except:
             start_hour, start_minute = 0, 0
 
-        # 終了時間を分解（不明なら開始時間+1時間）
+        # 2. 終了時間を分解
         if end_time_str:
             try:
                 end_hour, end_minute = map(int, end_time_str.split(":"))
             except:
+                # 終了時間のパースに失敗した場合、デフォルトで開始から1時間後とします
                 end_hour, end_minute = start_hour + 1, start_minute
         else:
+            # 終了時間がない場合、デフォルトで開始から1時間後とします
             end_hour, end_minute = start_hour + 1, start_minute
 
-        # y座標計算
+        # 3. Y座標の計算
+        # 開始時刻のY座標
         y_start = text_start_y + (start_hour + start_minute / 60) * PX_PER_HOUR
+        # 終了時刻のY座標
         y_end = text_start_y + (end_hour + end_minute / 60) * PX_PER_HOUR
 
         # 矩形の横幅と塗りつぶし色
         rect_width = 41
         fill_color = (200, 200, 200)  # 灰色
 
-        # 背景を塗りつぶす矩形
+        # 4. 背景を塗りつぶす矩形を描画（y_start から y_end まで）
+        # day_x は予定を描画する列の中心X座標。
+        # [左上のx, 左上のy, 右下のx, 右下のy]
+        LINE_COLOR = BLACK # 枠線の色を定義（ここでは黒）
+        LINE_WIDTH = 1     # 線の太さを定義（元のwidthに合わせる）
+        
+        # 1. 内側を塗りつぶす矩形 (枠線は描画しない)
         draw.rectangle(
             [day_x - rect_width, y_start, day_x + rect_width, y_end],
             fill=fill_color,
-            outline=None,  # 枠線を残す場合
-            width=1
+            outline=None  # ここを None にすることで枠線を消します
+        )
+
+        # 2. 上下の横線のみを描画 (draw.line を使用)
+
+        # 上辺
+        draw.line(
+            [(day_x - rect_width, y_start), (day_x + rect_width, y_start)],
+            fill=LINE_COLOR,
+            width=LINE_WIDTH
+        )
+
+        # 下辺
+        draw.line(
+            [(day_x - rect_width, y_end), (day_x + rect_width, y_end)],
+            fill=LINE_COLOR,
+            width=LINE_WIDTH
         )
 
         # テキストは開始時間を表示せず、予定名だけ
         display_text = (summary[:10] + '...') if len(summary) > 10 else summary
 
         # 矩形内にテキスト表示（中央揃え）
+        # FONT_EVENT_OBJ はグローバル定義されていると仮定
         draw.text(
             (day_x, (y_start + y_end) / 2),
             display_text,
             fill=BLACK,
-            font=font_event,
+            font=FONT_EVENT_OBJ, # FONT_EVENT_OBJ に修正
             anchor="mm"
         )
-
 
 
 def create_calendar_image_week():
@@ -262,13 +314,13 @@ def create_calendar_image_week():
     font_week = FONT_SMALL_OBJ
     font_day = FONT_MEDIUM_OBJ
 
-    # タイトルの書き込み (変更なし)
+    # タイトルの書き込み
     title = f"{year} / {month:02d}"
-    draw.text((CALENDAR_WIDTH // 2, 35), title, fill=BLACK, font=font_title, anchor="mm")
+    draw.text(((CALENDAR_WIDTH - MARGIN) // 2, 35), title, fill=BLACK, font=font_title, anchor="mm")
     
-    # 曜日の書き込み (変更なし)
-    cell_width = CALENDAR_WIDTH // 8
-    week_header_y = CALENDAR_HEIGHT // 6
+    # 曜日の書き込み 
+    cell_width = (CALENDAR_WIDTH - MARGIN) // 8
+    week_header_y = CALENDAR_HEIGHT // 6 - MARGIN
     time_space = 125
 
     for i, day_name in enumerate(week_days):
@@ -277,7 +329,7 @@ def create_calendar_image_week():
         draw.text((x, week_header_y), day_name, fill = color, font = font_week, anchor = "mm")
 
 
-    # 予定読み込み (変更なし)
+    # 予定読み込み 
     try:
         events_list_json = calendar_api.getEvents(year, month) 
         events_mapped = parse_events_from_json(events_list_json)
@@ -294,9 +346,9 @@ def create_calendar_image_week():
     # --- 1. 日付セルと日付数字の描画（この時点では予定は描画しない） ---
     for day_index, date_obj in enumerate(week_dates):
         cell_x_start = day_index * cell_width + 85
-        cell_y_start = day_grid_start_y 
+        cell_y_start = day_grid_start_y - MARGIN
 
-        cell_coords = (cell_x_start, cell_y_start, cell_x_start + cell_width, CALENDAR_HEIGHT)
+        cell_coords = (cell_x_start, cell_y_start, cell_x_start + cell_width, CALENDAR_HEIGHT - MARGIN_TIMELINE_HEIGHT)
 
         cell_fill_color = HIGHLIGHT if date_obj == today else WHITE
 
@@ -316,24 +368,19 @@ def create_calendar_image_week():
             'day_x': x + 0.6
         })
         
-        # ★ ここから draw_appointment_week を削除（描画順序を変更するため）
-        # draw_appointment_week(date_obj, events_mapped, x + 0.6, draw)
-        
     # --- 2. 時間軸の描画（時間軸を最下層にしたい場合は、これを予定の描画よりも前に移動） ---
     
     # 時間軸の描画（時間目盛り）
-    # これが予定の下に来るようにする
     draw_time(draw)    
     
-    # 現在時刻ラインの描画
-    # これが予定の下に来るようにする
-    draw_current_time_line(draw)
+
 
     # --- 3. Googleカレンダーの予定を描画（これを最後に実行し、時間軸の上に来るようにする） ---
     
     for item in appointments_to_draw:
         draw_appointment_week(item['date'], events_mapped, item['day_x'], draw)
-
+    # 現在時刻ラインの描画
+    draw_current_time_line(draw)
 
     img_byte_arr = io.BytesIO()
     image.save(img_byte_arr, format='PNG')

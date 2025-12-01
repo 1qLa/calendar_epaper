@@ -12,12 +12,13 @@ from src import calendar_api
 # カレンダーのピクセル数(デフォルト 680:540)
 CALENDAR_WIDTH = 680
 CALENDAR_HEIGHT = 540
+MARGIN = 3
 
 FONT_FILE = "./src/key/KaiseiTokumin-Regular.ttf"
 FONT_LARGE = 36
 FONT_MEDIUM = 24
 FONT_SMALL = 18
-FONT_EVENT = 16
+FONT_EVENT = 14
 
 # フォントサイズはピクセル数に応じて変更推奨
 try:
@@ -186,7 +187,7 @@ def create_calendar_image():
     title = f"{year} / {month:02d}"
 
     draw.text(
-        (CALENDAR_WIDTH // 2, FONT_LARGE), 
+        ((CALENDAR_WIDTH - MARGIN) // 2, FONT_LARGE), 
         title, 
         fill = BLACK, 
         font = font_title, 
@@ -194,7 +195,7 @@ def create_calendar_image():
     )
 
     # 曜日ヘッダー
-    cell_width = CALENDAR_WIDTH // 7
+    cell_width = (CALENDAR_WIDTH - MARGIN)  // 7
     week_header_y = CALENDAR_HEIGHT // 6
 
     for i, day_name in enumerate(week_days):
@@ -224,8 +225,8 @@ def create_calendar_image():
     day_grid_start_y = CALENDAR_HEIGHT // 5
 
     # セルの高さを計算
-    cell_height = (CALENDAR_HEIGHT - day_grid_start_y) // 6
-    
+    full_height = 80
+    cell_height = (CALENDAR_HEIGHT - day_grid_start_y + full_height) // 6
     
 
     try:
@@ -238,15 +239,16 @@ def create_calendar_image():
     for week_index, week in enumerate(cal_data):
         for day_index, day in enumerate(week):
             
+        
             # セルの描画開始座標
-            cell_x_start = day_index * cell_width
+            cell_x_start = day_index * cell_width + MARGIN
             cell_y_start = day_grid_start_y + week_index * cell_height
 
 
             cell_coords = (
                 cell_x_start,
                 cell_y_start,
-                cell_x_start + cell_width,
+                cell_x_start + cell_width ,
                 cell_y_start + cell_height
             )
 
