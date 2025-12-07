@@ -3,12 +3,17 @@ import os
 import os.path
 import calendar
 
+
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from dotenv import load_dotenv
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CREDENTIALS_PATH = os.path.join(BASE_DIR, "key/credentials.json")
+TOKEN_PATH = os.path.join(BASE_DIR, "key/token.json")
 
 load_dotenv() # .envファイルから環境変数を読み込む
 
@@ -34,27 +39,20 @@ def getEvents(year, month):
   creds = None
   
 
-  # ユーザーのアクセスとリフレッシュトークンを格納するtoken.jsonファイルが存在する場合、token.jsonを使用して認証する。
-  if os.path.exists("./src/key/token.json"):
-    creds = Credentials.from_authorized_user_file("./src/key/token.json", SCOPES)
+  if os.path.exists(TOKEN_PATH):
+      creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
 
-  # 有効な資格情報がない場合、ユーザーにログインさせる
+  # 有効な資格情報がない場合
   if not creds or not creds.valid:
-    if creds and creds.expired and creds.refresh_token:
-
-      creds.refresh(Request())
-
-    else:
-
-      flow = InstalledAppFlow.from_client_secrets_file(
-        "./src/key/redentials.json", SCOPES
-      )
-
-      creds = flow.run_local_server(port=0)
-
-    # 次回以降の実行のために資格情報を保存
-    with open("./src/key/token.json", "w") as token:
-      token.write(creds.to_json())
+      if creds and creds.expired and creds.refresh_token:
+          creds.refresh(Request())
+      else:
+          # ブラウザで認証して creds を取得
+          flow = InstalledAppFlow.from_client_secrets_file(CREDENTIALS_PATH, SCOPES)
+          creds = flow.run_local_server(port=0)  # ローカル Mac ならブラウザが開く
+          # 認証情報を保存
+          with open(TOKEN_PATH, "w") as token:
+              token.write(creds.to_json())
 
   try:
     service = build("calendar", "v3", credentials=creds)
