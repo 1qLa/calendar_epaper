@@ -3,12 +3,21 @@ from src import create_png
 from src import weather_forecast
 from src import create_png_weekly
 from src import create_today_png
+from src import composer
 
 import io
 import requests
 
 app = FastAPI() 
 
+# 
+@app.get("/dashboard")
+def get_dashboard():
+    image_data = composer.get_dashboard_image()
+    return Response(content=image_data, media_type="image/png")
+
+
+#デバック用****
 @app.get("/")
 def read_root():
     return {"message": "HelloWorld"}
