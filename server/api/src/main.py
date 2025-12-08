@@ -4,6 +4,7 @@ from src import weather_forecast
 from src import create_png_weekly
 from src import create_today_png
 from src import composer
+from src import composer_week
 
 import io
 import requests
@@ -16,6 +17,10 @@ def get_dashboard():
     image_data = composer.get_dashboard_image()
     return Response(content=image_data, media_type="image/png")
 
+@app.get("/dashboard_week")
+def get_dashboard():
+    image_data = composer_week.get_dashboard_image()
+    return Response(content=image_data, media_type="image/png")
 
 #デバック用****
 @app.get("/")
