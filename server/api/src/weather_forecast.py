@@ -30,7 +30,8 @@ CITY_LIST = ["Tokyo", "Osaka", "Nagoya", "Fukuoka", "California", "San Francisco
 TARGET_CITY = CITY_LIST[1]
 
 # 言語設定 Trueなら日本語フォント、Falseなら英語フォント
-IS_JAPANESE = False
+IS_JAPANESE = True
+# 言語コード設定
 LANG_CODE = "ja" if IS_JAPANESE else "en"
 
 # フォントファイルへのパス
