@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Response, Request
 from src import cache_manager 
+from fastapi import Query
 import asyncio
 
 # デバッグ用import
@@ -15,9 +16,10 @@ async def startup_event():
 # 本番用エンドポイント
 
 @app.get("/dashboard")
-def get_dashboard(request: Request):
+def get_dashboard( request: Request, year: int = Query(...), month: int = Query(...)):
+
     # マネージャーから「現在の最新画像」をもらう
-    image_data, etag_hash = cache_manager.get_cached_data(mode="month")
+    image_data, etag_hash = cache_manager.get_cached_data(mode="month", year=year, month=month)
     
     # 
     client_etag = request.headers.get("if-none-match")
@@ -57,8 +59,8 @@ def read_root():
     return {"message": "HelloWorld"}
 
 @app.get("/monthData")
-def read_data():
-    return Response(content=create_png.create_calendar_image(), media_type="image/png")
+def read_data(year: int = Query(...), month: int = Query(...)):
+    return Response(content=create_png.create_calendar_image(year, month), media_type="image/png")
 
 @app.get("/weather")
 def generate_weather():

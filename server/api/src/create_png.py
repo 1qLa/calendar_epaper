@@ -41,11 +41,10 @@ HIGHLIGHT = (235, 235, 235)  # 今日の背景用
 
 # 日付情報の取得
 today = datetime.date.today()
-year = today.year
-month = today.month
+# year = today.year
+# month = today.month
 
-# 祝日データの取得 
-jp_holidays = holidays.Japan(years=year)
+
 
 # ************フォントの準備処理************
 try:
@@ -148,8 +147,11 @@ def is_holiday(date):
 
 
 #　☆☆☆☆カレンダー画像生成関数☆☆☆☆
-def create_calendar_image():
-
+def create_calendar_image(year, month):
+    
+    global jp_holidays
+    # 祝日データの取得 
+    jp_holidays = holidays.Japan(years=year)
     # カレンダーの形を計算
     calendar.setfirstweekday(calendar.SUNDAY)
     cal_data = calendar.monthcalendar(year, month)
@@ -280,8 +282,8 @@ def create_calendar_image():
 
 
 # ☆☆☆☆外から呼び出すための関数☆☆☆☆
-def throw_data():
-    data = create_calendar_image()
+def throw_data(year, month):
+    data = create_calendar_image(year, month)
     return data
 
 
