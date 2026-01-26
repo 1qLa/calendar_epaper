@@ -41,11 +41,10 @@ HIGHLIGHT = (235, 235, 235)  # 今日の背景用
 
 # 日付情報の取得
 today = datetime.date.today()
-year = today.year
-month = today.month
+# year = today.year
+# month = today.month
 
-# 祝日データの取得 
-jp_holidays = holidays.Japan(years=year)
+
 
 # ************フォントの準備処理************
 try:
@@ -148,8 +147,11 @@ def is_holiday(date):
 
 
 #　☆☆☆☆カレンダー画像生成関数☆☆☆☆
-def create_calendar_image():
-
+def create_calendar_image(year, month):
+    
+    global jp_holidays
+    # 祝日データの取得 
+    jp_holidays = holidays.country_holidays("JP", years=year)
     # カレンダーの形を計算
     calendar.setfirstweekday(calendar.SUNDAY)
     cal_data = calendar.monthcalendar(year, month)
@@ -236,7 +238,7 @@ def create_calendar_image():
                 continue
             
             # *** 今日の日付の処理 ***
-            if (day == today.day):
+            if (day == today.day and month == today.month and year == today.year):
                 # 今日なら背景をグレーにする
                 cell_fill_color = HIGHLIGHT
             else:
@@ -280,18 +282,20 @@ def create_calendar_image():
 
 
 # ☆☆☆☆外から呼び出すための関数☆☆☆☆
-def throw_data():
-    data = create_calendar_image()
+def throw_data(year=None, month=None):
+    if year is None or month is None:
+        today = datetime.date.today()
+        year, month = today.year, today.month
+    data = create_calendar_image(year, month)
     return data
 
-
 # テスト実行用
-if __name__ == "__main__":
-    print("カレンダー画像を生成中...")
-    png_data = create_calendar_image()
+# if __name__ == "__main__":
+#     print("カレンダー画像を生成中...")
+#     png_data = create_calendar_image()
     
-    output_filename = "this_month_calendar.png"
-    with open(output_filename, "wb") as f:
-        f.write(png_data)
+#     output_filename = "this_month_calendar.png"
+#     with open(output_filename, "wb") as f:
+#         f.write(png_data)
         
-    print(f"完了: '{output_filename}' を保存しました。")
+#     print(f"完了: '{output_filename}' を保存しました。")

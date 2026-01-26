@@ -1,6 +1,7 @@
 # ***** モジュールインポート ******
 from PIL import Image
 import io
+import datetime
 
 from src import create_png    # 月間カレンダー
 from src import weather_forecast    # 天気予報
@@ -25,43 +26,38 @@ SPLIT_Y = int(TOTAL_HEIGHT * 0.3)
 
 # ********** 関数エリア *********
 
-def combine_dashboard():
+def combine_dashboard(year=None, month=None):
     canvas = Image.new("RGB", (TOTAL_WIDTH, TOTAL_HEIGHT), (255, 255, 255))
 
+    # 引数がなければ現在時刻
+    if year is None or month is None:
+        now = datetime.datetime.now()
+        year, month = now.year, now.month
+
     # 各モジュールから画像データを取得する
-    calendar_bytes = create_png.throw_data()#月のカレンダー画像データ取得
+    # ★ここが重要：create_png に引数を渡す
+    calendar_bytes = create_png.throw_data(year, month) 
 
-    weather_bytes = weather_forecast.throw_data()#天気予報画像データ取得
-    
-    today_bytes = create_today_png.throw_data()#今日の予定画像データ取得
-
+    weather_bytes = weather_forecast.throw_data() # 天気は常に最新でOK
+    today_bytes = create_today_png.throw_data()   # 今日の予定も最新でOK
 
     img_calendar = Image.open(io.BytesIO(calendar_bytes))
     img_weather = Image.open(io.BytesIO(weather_bytes))
     img_today = Image.open(io.BytesIO(today_bytes))
 
-
-    
-    #左上,月のカレンダー
+    # 合成
     canvas.paste(img_calendar, (0, 0))
-
-    # 右上,天気予報
     canvas.paste(img_weather, (SPLIT_X, 0))
-
-    # 右下,今日の予定
     canvas.paste(img_today, (SPLIT_X, SPLIT_Y))
 
-
-    # 画像をバイトデータに戻して返す
     output = io.BytesIO()
     canvas.save(output, format="PNG")
     return output.getvalue()
 
 
 # ☆☆☆☆ 外から呼び出すための関数 ☆☆☆☆
-def get_dashboard_image():
-    return combine_dashboard()
-
+def get_dashboard_image(year=None, month=None):
+    return combine_dashboard(year, month)
 
 # テスト実行用
 if __name__ == "__main__":

@@ -56,7 +56,7 @@ month = today.month
 name_holiday = None
 
 # 祝日
-jp_holidays = holidays.Japan(years=year)
+jp_holidays = holidays.country_holidays("JP", years=year)
 name_holiday = None
 
 
