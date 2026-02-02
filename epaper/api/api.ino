@@ -296,6 +296,14 @@ void setup() {
   // NTP設定
   configTime(9 * 3600, 0, "pool.ntp.org", "time.google.com");
 
+  // 時刻が取得できるまで最大10秒間待機する
+  int retry = 0;
+  // getLocalTimeが true を返すまで、0.5秒おきに繰り返す (最大20回=10秒)
+  while (!getLocalTime(&timeinfo) && retry < 20) {
+    delay(500);
+    retry++;
+  }
+
   if (getLocalTime(&timeinfo)) {
     // 現在の年月を初期値にセット
     displayYear = timeinfo.tm_year + 1900;
