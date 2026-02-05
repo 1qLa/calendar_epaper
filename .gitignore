@@ -225,3 +225,9 @@ __marimo__/
 *.pdb
 *.ilk
 *.idb
+
+#python
+/server/api/src/key/*
+
+# DS_Store
+.DS_Store
