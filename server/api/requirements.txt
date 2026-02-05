@@ -1,23 +1,20 @@
-# 1. Webフレームワーク本体
+# Webフレームワーク本体
 fastapi
 
-# 2. FastAPIを動かすためのASGIサーバー
+#  FastAPIを動かすためのASGIサーバー
 uvicorn[standard]
 
-# 3. MySQLデータベースに接続するため
-sqlalchemy
-pymysql
 
-# 4. .env ファイルを読み込むため
+#  .env ファイルを読み込むため
 python-dotenv
 
-# 5 画像生成（Pillow）のため
+# 画像生成（Pillow）のため
 Pillow
 
-#6祝日判定のため
+#祝日判定のため
 holidays
 
-#7 googleモジュール使用のため
+# googleモジュール使用のため
 google-api-python-client
 google-auth-oauthlib
 requests
