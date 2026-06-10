@@ -2,6 +2,8 @@
 
 Googleカレンダーと連携し、最新の予定を自動表示するM5Paper専用のIoT電子ペーパーカレンダーです。紙のような目に優しい質感と、常に最新の予定が把握できるデジタルの利便性を両立しています。
 
+<img width="577" height="432" alt="Image" src="https://github.com/user-attachments/assets/a81dcb99-d163-4fe6-81c7-1aa2c191e5cf" />
+
 ## 特徴
 
 * **Googleカレンダー自動同期**
