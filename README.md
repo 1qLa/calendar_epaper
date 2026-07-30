@@ -4,6 +4,12 @@ Googleカレンダーと連携し、最新の予定を自動表示するM5Paper�
 
 <img width="577" height="432" alt="Image" src="https://github.com/user-attachments/assets/a81dcb99-d163-4fe6-81c7-1aa2c191e5cf" />
 
+## 📊 発表資料 (Presentation)
+本プロジェクトの背景などについては、以下のスライドをご覧ください。
+* **[スライド資料はこちら](https://canva.link/rsez2alt8vggqhj)**
+
+---
+
 ## 特徴
 
 * **Googleカレンダー自動同期**
